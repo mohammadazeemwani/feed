@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "prepublish": "npm build",
+    "prepublish": "npm run build",
     "test": "jest --silent",
     "test-travis": "jest --coverage",
     "pretty:check": "prettier src/* --check",
