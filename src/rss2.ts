@@ -212,18 +212,21 @@ export default (ins: Feed) => {
     if (entry.video) {
       item.enclosure = formatEnclosure(entry.video, "video");
     }
-    // Add after the video enclosure check
+
     if (entry.image) {
       // Add media namespace if not already added
       if (!base.rss._attributes) {
         base.rss._attributes = {};
       }
-      
+      if (!base.rss._attributes["xmlns:media"]) {
+        base.rss._attributes["xmlns:media"] = "http://search.yahoo.com/mrss/";
+      }
+
       // Add media:thumbnail and media:content
       if (!item["media:thumbnail"]) {
         item["media:thumbnail"] = { _attributes: { url: entry.image } };
       }
-      
+
       if (!item["media:content"]) {
         item["media:content"] = { _attributes: { medium: 'image', url: entry.image } };
       }
