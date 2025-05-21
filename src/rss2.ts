@@ -212,6 +212,22 @@ export default (ins: Feed) => {
     if (entry.video) {
       item.enclosure = formatEnclosure(entry.video, "video");
     }
+    // Add after the video enclosure check
+    if (entry.image) {
+      // Add media namespace if not already added
+      if (!base.rss._attributes) {
+        base.rss._attributes = {};
+      }
+      
+      // Add media:thumbnail and media:content
+      if (!item["media:thumbnail"]) {
+        item["media:thumbnail"] = { _attributes: { url: entry.image } };
+      }
+      
+      if (!item["media:content"]) {
+        item["media:content"] = { _attributes: { medium: 'image', url: entry.image } };
+      }
+    }
 
     if (entry.extensions) {
       entry.extensions.forEach((extension: Extension) => {
@@ -276,12 +292,55 @@ export default (ins: Feed) => {
  */
 const formatEnclosure = (enclosure: string | Enclosure, mimeCategory = "image") => {
   if (typeof enclosure === "string") {
-    const type = new URL(sanitize(enclosure)!).pathname.split(".").slice(-1)[0];
-    return { _attributes: { url: enclosure, length: 0, type: `${mimeCategory}/${type}` } };
+    try {
+      // Extract file extension more reliably
+      const url = new URL(sanitize(enclosure) || "");
+      const pathname = url.pathname;
+      const extension = pathname.split(".").pop() || "jpeg"; // Default to jpeg if no extension
+      
+      return { 
+        _attributes: { 
+          url: enclosure, 
+          length: 0, 
+          type: `${mimeCategory}/${extension}` 
+        } 
+      };
+    } catch (e) {
+      // Fallback for invalid URLs
+      return { 
+        _attributes: { 
+          url: enclosure, 
+          length: 0, 
+          type: `${mimeCategory}/jpeg` // Default fallback
+        } 
+      };
+    }
   }
 
-  const type = new URL(sanitize(enclosure.url)!).pathname.split(".").slice(-1)[0];
-  return { _attributes: { length: 0, type: `${mimeCategory}/${type}`, ...enclosure } };
+  // For object enclosures
+  try {
+    const url = new URL(sanitize(enclosure.url) || "");
+    const pathname = url.pathname;
+    const extension = pathname.split(".").pop() || "jpeg";
+    
+    // Create base attributes then apply enclosure properties
+    const attributes = { 
+      url: enclosure.url,
+      length: enclosure.length || 0,
+      type: enclosure.type || `${mimeCategory}/${extension}`
+    };
+    
+    return { _attributes: attributes };
+  } catch (e) {
+    // Fallback for invalid URLs in object
+    const attributes = {
+      url: enclosure.url,
+      length: enclosure.length || 0,
+      type: enclosure.type || `${mimeCategory}/jpeg`
+    };
+    
+    return { _attributes: attributes };
+  }
 };
 
 /**

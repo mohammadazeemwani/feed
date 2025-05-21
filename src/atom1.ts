@@ -27,17 +27,14 @@ export default (ins: Feed) => {
     },
   };
 
-  if (options.stylesheet) {
-      // console.log('atom has stylesheet ')
-      base._instruction = {
-          "xml-stylesheet": {
-              _attributes: {
-                  href: options.stylesheet,
-                  type: "text/xsl"
-              }
-          }
-      }   
-  }
+  base._instruction = options.stylesheet ? {
+    "xml-stylesheet": {
+        _attributes: {
+            href: options.stylesheet,
+            type: "text/xsl"
+        }
+    }
+  } : {};
 
   if (options.author) {
     base.feed.author = formatAuthor(options.author);
@@ -232,21 +229,46 @@ const formatAuthor = (author: Author) => {
  * @param mimeCategory
  */
 const formatEnclosure = (enclosure: string | Enclosure, mimeCategory = "image") => {
-  if (typeof enclosure === "string") {
-    const type = new URL(enclosure).pathname.split(".").slice(-1)[0];
-    return { _attributes: { rel: "enclosure", href: enclosure, type: `${mimeCategory}/${type}` } };
-  }
+  try {
+    if (typeof enclosure === "string") {
+      let type;
+      try {
+        const url = new URL(sanitize(enclosure) || "");
+        const pathname = url.pathname;
+        type = pathname.split(".").pop() || "jpeg";
+      } catch (e) {
+        type = "jpeg"; // Default fallback
+      }
+      
+      return { _attributes: { url: enclosure, length: 0, type: `${mimeCategory}/${type}` } };
+    }
 
-  const type = new URL(enclosure.url).pathname.split(".").slice(-1)[0];
-  return {
-    _attributes: {
-      rel: "enclosure",
-      href: enclosure.url,
-      title: enclosure.title,
-      type: `${mimeCategory}/${type}`,
-      length: enclosure.length,
-    },
-  };
+    // Handle object enclosure
+    let type;
+    try {
+      const url = new URL(sanitize(enclosure.url) || "");
+      type = url.pathname.split(".").pop() || "jpeg";
+    } catch (e) {
+      type = "jpeg"; // Default fallback
+    }
+    
+    return { 
+      _attributes: { 
+        url: enclosure.url, 
+        length: enclosure.length || 0, 
+        type: enclosure.type || `${mimeCategory}/${type}` 
+      } 
+    };
+  } catch (e) {
+    // Fallback for any other errors
+    return { 
+      _attributes: { 
+        url: typeof enclosure === 'string' ? enclosure : enclosure.url,
+        length: 0, 
+        type: `${mimeCategory}/jpeg` 
+      } 
+    };
+  }
 };
 
 /**
