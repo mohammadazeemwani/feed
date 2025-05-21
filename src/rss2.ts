@@ -14,6 +14,7 @@ export default (ins: Feed) => {
 
   const base: any = {
     _declaration: { _attributes: { version: "1.0", encoding: "utf-8" } },
+    _instruction: {},
     rss: {
       _attributes: { version: "2.0" },
       channel: {
@@ -26,6 +27,16 @@ export default (ins: Feed) => {
       },
     },
   };
+  if (options.stylesheet) {
+    base._instruction = {
+        "xml-stylesheet": {
+            _attributes: {
+                href: options.stylesheet,
+                type: "text/xsl"
+            }
+        }
+    }   
+  }
 
   /**
    * Channel language
@@ -214,6 +225,7 @@ export default (ins: Feed) => {
   if (isContent) {
     base.rss._attributes["xmlns:dc"] = "http://purl.org/dc/elements/1.1/";
     base.rss._attributes["xmlns:content"] = "http://purl.org/rss/1.0/modules/content/";
+    base.rss._attributes["xmlns:media"] = "http://search.yahoo.com/mrss/";
   }
 
   // rss2() support `extensions`

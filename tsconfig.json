@@ -15,7 +15,7 @@
     "noImplicitReturns": true,
     "strict": true,
     "target": "ESNext",
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": false
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules", "lib", "src/__tests__/**/*"]

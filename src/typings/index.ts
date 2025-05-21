@@ -54,6 +54,8 @@ export interface FeedOptions {
   language?: string;
   ttl?: number;
 
+  stylesheet?: string;
+
   feed?: string;
   feedLinks?: any;
   hub?: string;
